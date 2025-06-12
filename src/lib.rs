@@ -122,6 +122,7 @@ impl Escalate {
             args[0] = absolute_path;
         }
         let mut command: Command = Command::new(&self.wrapper);
+        let mut has_env = false;
 
         // Always propagate RUST_BACKTRACE
         if let Ok(trace) = std::env::var("RUST_BACKTRACE") {
@@ -141,10 +142,12 @@ impl Escalate {
                 tracing::trace!("relaying RUST_BACKTRACE={}", value);
                 // command.arg(format!("RUST_BACKTRACE={}", value));
                 command.env("RUST_BACKTRACE", value);
+                has_env = true;
             }
         }
 
         if !patterns.is_empty() {
+            has_env = true;
             // Only add env for pkexec if we're passing any additional env vars
             if self.wrapper == "pkexec" {
                 tracing::trace!(
@@ -169,6 +172,11 @@ impl Escalate {
                     command.env(name, value);
                 }
             }
+        }
+
+        if has_env && self.wrapper == "sudo" {
+            tracing::trace!("ARG -E ");
+            command.arg("-E");
         }
 
         let mut child = command.args(args).spawn().expect("failed to execute child");
