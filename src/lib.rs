@@ -146,7 +146,7 @@ impl Escalate {
 
         if !patterns.is_empty() {
             // Only add env for pkexec if we're passing any additional env vars
-            if self.wrapper == "pkexec" {
+            if self.wrapper == "pkexec" || self.wrapper == "sudo" {
                 tracing::trace!(
                     "Prefixing `env` to pkexec command to pass additional environment variables! \
                      This may break pkexec system policies."
@@ -163,7 +163,7 @@ impl Escalate {
                     }
                 }) {
                     tracing::trace!("propagating {}={}", name, value);
-                    if self.wrapper == "pkexec" {
+                    if self.wrapper == "pkexec" || self.wrapper == "sudo" {
                         command.arg(format!("{}={}", name, value));
                     }
                     command.env(name, value);
